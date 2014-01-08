@@ -1,0 +1,10 @@
+% Feynmann diagram rendering
+\usepackage{verbatim}
+\usepackage{tikz}
+\newcounter{feynrindex}
+\newcommand{\feynrtimehoriz}{}
+\newcommand{\feynrtimevert}{}
+\newenvironment{feynr}%
+{\input{feynr\arabic{feynrindex}}\expandafter\comment}%
+{\expandafter\endcomment\stepcounter{feynrindex}}
+
