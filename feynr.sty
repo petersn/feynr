@@ -2,8 +2,7 @@
 \usepackage{verbatim}
 \usepackage{tikz}
 \newcounter{feynrindex}
-\newcommand{\feynrtimehoriz}{}
-\newcommand{\feynrtimevert}{}
+\newcommand{\feynroptions}[1]{}
 \newenvironment{feynr}%
 {\input{feynr\arabic{feynrindex}}\expandafter\comment}%
 {\expandafter\endcomment\stepcounter{feynrindex}}

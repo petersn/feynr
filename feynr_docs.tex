@@ -300,7 +300,7 @@ The \texttt{skeleton} command gives the type, length, and angle of the interacti
 The first and last \texttt{draw} commands draw little lengths of photons up along the first and last 30\% of the middle edge.
 Finally, the middle two \texttt{draw} commands draw the two halfs of the circle.
 Note that the order of the arguments is swapped between them, which is why they aren't just drawn on top of each other.
-Of course, we could also have done it by using the\texttt{positron} and \texttt{flip} flags on one, and keeping the argument order the same.
+Of course, we could also have done it by using the \texttt{positron} and \texttt{flip} flags on one, and keeping the argument order the same.
 However, I think this looks cleaner.
 For convenience, the above four draw commands can be acheived on the edge between \texttt{a} and \texttt{b} with the single macro command \texttt{photon-loop a b}.
 For example:
@@ -350,6 +350,24 @@ Valid flags for nodes are:
 Valid flags for interactions are:
 \begin{quote}
 \texttt{electron}, \texttt{positron}, \texttt{photon}, \texttt{hidden}, \texttt{free}, \texttt{0time}, \texttt{0space}, \texttt{arc}, \texttt{flip}, \texttt{no-arrow}
+\end{quote}
+Valid options to pass to \texttt{\textbackslash{}feynroptions} are:
+\begin{center}
+\begin{tabular}{r|l}
+	Option & Description \\\hline
+	\texttt{time-up} & Same as \texttt{angle=0, flip=0} \\
+	\texttt{time-down} & Same as \texttt{angle=0, flip=1} \\
+	\texttt{time-left} & Same as \texttt{angle=270, flip=1} \\
+	\texttt{time-right} & Same as \texttt{angle=270, flip=0} \\
+	\texttt{flip=<0 or 1>} & Sets whether the y-axis is mirrored. \\
+	\texttt{angle=<degrees>} & Rotate the diagram counter-clockwise. \\
+	\texttt{photon-frequency=<num>} & Change the frequency of photons. \\
+	\texttt{photon-amplitude=<num>} & Change the amplitude of photons. \\
+\end{tabular}
+\end{center}
+The default is:
+\begin{quote}
+	\texttt{\textbackslash{}feynroptions\{time-up, photon-frequency=1.0, photon-amplitude=1.0\}}
 \end{quote}
 
 \end{document}

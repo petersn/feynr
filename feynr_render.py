@@ -5,6 +5,7 @@ import math
 
 begin_env = re.compile(r"\\begin\s*[{]feynr[}]", re.MULTILINE)
 end_env = re.compile(r"\\end\s*[{]feynr[}]", re.MULTILINE)
+feynr_options = re.compile(r"\\feynroptions\s*[{]([^}]*)[}]", re.MULTILINE)
 
 anti_particle = {
 	"electron": "positron",
@@ -50,7 +51,47 @@ def short_way_around(a, b):
 	else:
 		return b, make_more_than(b, a)
 
+def remove_latex_comments(s):
+	"""remove_latex_comments(s) -> s, but after a crummy attempt to remove comments"""
+	bilge = "RaNdOmNoNcE"
+	return "\n".join(i.replace("\\%", bilge).split("%", 1)[0].replace(bilge, "\\%") for i in s.split("\n"))
+
+global_config = {
+	"rotate": 0,
+	"flip": 0,
+	"photon-frequency": 1.0,
+	"photon-amplitude": 1.0,
+}
+
+direct_options = ["flip", "rotate", "photon-frequency", "photon-amplitude"]
+
+def global_interpret(opt):
+	print "="*5, "\\feynroptions{%s}" % opt
+	if opt == "time-up":
+		global_config["rotate"] = 0
+		global_config["flip"] = False
+	elif opt == "time-down":
+		global_config["rotate"] = 0
+		global_config["flip"] = True
+	elif opt == "time-left":
+		global_config["rotate"] = 270
+		global_config["flip"] = True
+	elif opt == "time-right":
+		global_config["rotate"] = 270
+		global_config["flip"] = False
+	elif any(opt.startswith(i+"=") for i in direct_options):
+		for i in direct_options:
+			if opt.startswith(i+"="):
+				global_config[i] = float(opt[len(i)+1:])
+	else:
+		error("Unknown \\feynroptions flag: %s" % opt)
+
 def extract_envs(s):
+	s = remove_latex_comments(s)
+	# Find all the options passed.
+	for opts in feynr_options.findall(s):
+		opts = [i.strip() for i in opts.split(",") if i.strip()]
+		map(global_interpret, opts)
 	envs = []
 	while True:
 		match = begin_env.search(s)
@@ -211,8 +252,8 @@ class Line:
 				distance = r * (angle_b - angle_a)
 			else:
 				distance = ((a_xy[0]-b_xy[0])**2+(a_xy[1]-b_xy[1])**2)**0.5
-			wiggle_amp = 0.05
-			complete_waves = int(round(4*distance))
+			wiggle_amp = 0.05*global_config["photon-amplitude"]
+			complete_waves = int(round(4*distance*global_config["photon-frequency"]))
 			# Draw a photonic sine wave.
 			wiggles = complete_waves*8+1
 			orthog = b_xy[1]-a_xy[1], a_xy[0]-b_xy[0]
@@ -312,7 +353,7 @@ class Drawing:
 		return next_node
 
 	def to_code(self):
-		s = "\\begin{tikzpicture}\n"
+		s = "\\begin{tikzpicture}[rotate=%i,xscale=1,yscale=%i]\n" % (global_config["rotate"], -1 if global_config["flip"] else 1)
 		for l in (self.elements, self.draw_only_elements):
 			s += "\n".join(e.to_code() for e in l)
 		s += "\\end{tikzpicture}\n"
