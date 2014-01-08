@@ -1,32 +1,61 @@
 \documentclass[12pt]{article}
 \usepackage[margin=3cm]{geometry}
 \usepackage{feynr}
-\usepackage{listings}
-\usepackage{caption,subcaption}
+\usepackage{listings,hyperref,caption,subcaption,wrapfig}
+\lstset{
+    literate={~} {$\sim$}{1}
+}
 \newcommand{\feynR}{\texttt{feynr}}
 \title{Using \feynR}
 \author{Peter Schmidt-Nielsen}
 \begin{document}
 \maketitle
-\section*{Basic Usage}
-\subsection*{Command-line Usage}
+\section*{Installation}
+You can download \feynR{} at \url{http://github.com/petersn/feynr}.
+All you need are the files \texttt{feynr.sty} and \texttt{feynr\_render.py}.
+\subsection*{Best Practices Install}
+Mark \texttt{feynr\_render.py} as executable, and place it on your path.
+Add \texttt{feynr.sty} to your \TeX path, and rerun \texttt{texhash}.
+You are now set up.
+\subsection*{Lazy (/Non-Root) Installl}
+Copy both \texttt{feynr.sty} and \texttt{feynr\_render.py} to the directory for your project.
+Instead of running \texttt{feynr\_render.py source.tex} to rebuild your diagrams you'll have to run \texttt{python feynr\_render.py source.tex}.
+C'est la vie.
+
+\section*{Overview}
 Include \feynR{} with the usual \texttt{\textbackslash{}usepackage\{feynr\}}.
 Place your diagram source code in a \feynR{} environment to render a diagram.
-For example, \texttt{\textbackslash{}begin\{feynr\} source \textbackslash{}end\{feynr\}}.
-Run \texttt{feynr\_render} on your \LaTeX{} file after each time you update a \feynR{} diagram:
+A minimalish example:
 \begin{quote}
-\texttt{feynr\_render source.tex}\\
+% This is going to sound really stupid, but I can't use lstlisting env here
+% Because then feynr_render.py would get confused and try to parse the source...
+% TODO: Fix this incredibly stupid bug.
+\texttt{\textbackslash{}documentclass\{article\}\\
+\textbackslash{}usepackage\{feynr\}\\
+\textbackslash{}begin\{document\}\\
+\textbackslash{}begin\{feynr\}\\
+feynr diagram specification\\
+\textbackslash{}end\{feynr\}\\
+\textbackslash{}end\{document\}}
+\end{quote} 
+Run \texttt{feynr\_render.py} on your \LaTeX{} file after each time you update a \feynR{} diagram:
+\begin{quote}
+\texttt{feynr\_render.py source.tex}\\
 \texttt{pdflatex source.tex}
 \end{quote}
-You can download \feynR{} at
+
+\section*{Basic Usage}
+Anywhere in your preamble you may specify comma separated global options to \feynR{} in the \texttt{\textbackslash{}feynroptions} command.
+For example, \texttt{\textbackslash{}feynroptions\{time-right\}} will override the default of \texttt{time-up}, and switch away from Feynman's original convention.
+A complete list of options can be found at the end of this document.
 
 In \feynR{}, particles are explicitly tracked.
 You can create an input particle to your diagram with the \texttt{input} command.
 For example, \texttt{input a} defines an input particle called \texttt{a}.
 Special flags can be passed to any \feynR{} command with a pair of dashes.
-For example, to declare an input particle \texttt{a} that's an electron we may use: \texttt{input a -- electron}.
+For example, to declare an input particle \texttt{a} that's an electron we may use: \mbox{\texttt{input a -- electron}}.
 More than one particle may be declared in a single command, and the flags passed apply to all particles.
-For example, to declare three positrons: \texttt{input p1 p2 p3 -- positron}.
+For example, to declare three positrons: \mbox{\texttt{input p1 p2 p3 -- positron}}.
 Particle types may be omitted if they can be unambiguously inferred from elsewhere in the diagram.
 
 Particles can be made to interact with each other with the \texttt{interact} command.\footnote{The command \texttt{interact} can also be abbreviated as a single dash.}
@@ -37,7 +66,7 @@ However, frequently you will have to specify what form the interaction takes.
 The flags \texttt{electron}, \texttt{positron}, and \texttt{photon} denote that the given particle propagated from the first argument to the second argument.
 For example, \texttt{interact p1 p2 -- electron} causes an electron to be emitted by \texttt{p1} and absorbed by \texttt{p2}.\footnote{Naturally, \texttt{interact a b -- electron} is equivalent to \texttt{interact b a -- positron}.}
 Note that as \texttt{interact} takes exactly two node arguments, the \texttt{--} separating flags from node arguments is optional.
-You may write either \texttt{interact a b -- flags} or \texttt{interact a b flags}, these are equivalent.
+You may write either \mbox{\texttt{interact a b -- flags}} or \texttt{interact a b flags}, these are equivalent.
 Just like \texttt{input}, there is a command \texttt{output} that can be used to disambiguate diagrams.
 For example, if, at the end of a sequence of interactions, it's ambiguous what type of particle \texttt{a} is, we can specify with, for example: \texttt{output a -- photon}.
 You can identify interactions in your diagram that couldn't have their type inferred -- they will appear as red sine waves.
@@ -46,15 +75,19 @@ Finally, we need to give \feynR{} some hints about the layout of our diagram.
 If you attempt to compile a diagram without any layout hints it will fail, as it can't figure out what angles the various lines should be drawn at.
 There are two default layout hints, \texttt{0space} and \texttt{0time}.
 These hints indicate that the given interaction should be drawn perpendicular to the specified axis.
+The naming convention is that a \texttt{0time} interaction has zero length in time, and a \texttt{0space} interaction has zero length in space.
 In other words, in a time-up Feynman diagram, \texttt{0time} indicates that the interaction should be drawn horizontally.
 For example, we can write \texttt{interact e1 e2 photon 0time} to cause particles \texttt{e1} and \texttt{e2} to exchange a photon that is drawn perpendicular to the time axis.
 
 The \texttt{propagate} command accumulates flags to be added on the next propagation that a given particle makes.
 For example, if we would like the particle \texttt{a} to propagate straight along the time axis the next time it propagates, we can issue the command \texttt{propagate a -- 0space}.
+Like all flags in \feynR{}, they apply only to a single interaction/propagation of a particle, and are not permanent.
+Thus, order matters.
+In the sequence \texttt{interact a b}, \texttt{propagate a -- flags}, \texttt{interact a c}, the extra flags given in the \texttt{propagate} command affect how particle \texttt{a} gets from the interaction with \texttt{b} to the interaction with \texttt{c}.
 
 Putting these all pieces together, let's look at some examples:
 
-\begin{figure}[h]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{figure}[h!]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
 \begin{lstlisting}
 input e -- electron
 propagate e -- 0space
@@ -67,7 +100,7 @@ propagate e -- 0space
 \end{center}\end{subfigure}\end{figure}
 The first line defines an electron, and the second is a layout hint that it should propagate along the time axis.
 
-\begin{figure}[h]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{figure}[h!]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
 \begin{lstlisting}
 input e1 e2 -- electron
 interact e1 e2 photon 0time
@@ -80,7 +113,7 @@ interact e1 e2 photon 0time
 \end{center}\end{subfigure}\end{figure}
 Here two electrons are defined in the first line, and made to exchange a photon along the space axis in the second.
 
-\begin{figure}[h]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{figure}[h!]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
 \begin{lstlisting}
 input e -- electron
 input p -- photon
@@ -113,7 +146,211 @@ interact p1 p2 electron 0time
 Here Delbr\"uck scattering is concisely described in four lines.
 The third line (\texttt{propagate p1 p2 -- 0space}) makes sure that the electrons propagate vertically in the diagram, forming a nice square box when used with the horizontal \texttt{0time} interactions.
 
+\newpage
 \section*{Advanced Usage}
+Let's look how we might lay out a more complicated diagram.
+
+\begin{figure}[h!]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{lstlisting}
+input p1 p2 -- electron
+skeleton p1 p2 photon 0time
+propagate p1 p2 -- 0space
+skeleton p1 p2 photon 0time
+draw p1~2 p2~3 photon
+draw p2~2 p1~3 photon
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{feynr}
+input p1 p2 -- electron
+skeleton p1 p2 photon 0time
+propagate p1 p2 -- 0space
+skeleton p1 p2 photon 0time
+draw p1~2 p2~3 photon
+draw p2~2 p1~3 photon
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+Okay, there's a lot to break down here.
+We're using two new commands, \texttt{skeleton} and \texttt{draw}.
+The command \texttt{skeleton} is exactly equivalent to \texttt{interact}, only it automatically passes the flag \texttt{hidden}, a special flag that causes the interaction to not be rendered.
+That is to say, \texttt{interact a b hidden} is exactly equivalent to \texttt{skeleton a b}.
+Crucially, the interaction is still used for type-inference, and used for structural layout -- thus \texttt{skeleton}.
+The purpose of the \texttt{skeleton} command is to allow you to quickly build the desired shape and types of your diagram without worrying too much about how you're going to fill in the interactions.
+Further, it allows for a tremendous amount of uniformity and control of the generated diagrams.
+You can produce a skeleton interaction, then later fill in multiple different kinds of interactions between the skeleton interacting particles without changing the layout of your diagram by a single pixel.
+What about \texttt{draw}?
+Just like \texttt{skeleton}, \texttt{draw} is a version of \texttt{interact} that passes an extra flag, in this case \texttt{free}.
+The \texttt{free} flag says that the given interaction is purely for display purposes, and does not affect type-inference or structural layout.
+
+In the above diagram \texttt{skeleton} is necessary, and here's why:
+Unfortunately, we have a dependency loop: \texttt{p1} is interacting with a future version of \texttt{p2} and vice versa.
+There is nothing to be done about this, so we simply produce two skeleton interactions that form the same box as before with our Delbr\"uck scattering.
+Finally, we use \texttt{draw} to add photons between \texttt{p1} and \texttt{p2}, but we must specify the out-of-order interaction we want.
+Thus, we introduce nodes.
+Each particle produces a trail of nodes along its path.
+For example, \texttt{p1} has four nodes: the four leftmost vertices in the above diagram.
+These vertices are automatically internally labeled \texttt{p1$\sim$1}, \texttt{p1$\sim$2}, \texttt{p1$\sim$3}, and \texttt{p1$\sim$4}.
+These correspond to \texttt{p1}'s input node, two nodes connected to photons, and output node respectively.
+By issuing the command \texttt{draw p1$\sim$2 p2$\sim$3 photon} we render a photon from the second node on \texttt{p1}'s path to the third node on \texttt{p2}'s path.
+This corresponds to the photon propagating up and to the right in the above diagram.
+In this way, every vertex in our diagram receives a node label, and we can add extra features to our diagram without too much effort.
+
+\newpage
+When drawing Feynman diagrams we frequently want to add an emitted photon without affecting the layout of our diagram.
+Frequently we want this photon to be reabsorbed elsewhere in our diagram.
+Just like before where we used \texttt{skeleton} and \texttt{draw} to separate the layout and components of our diagram, here we can use \texttt{draw} to add additional details without distoring our diagram.
+Let's examine the following sort of diagram:
+
+\begin{figure}[h!]\begin{subfigure}[h]{0.6\textwidth}\begin{center}
+\begin{lstlisting}
+input e1 e2 -- electron
+propagate e1 -- no-arrow
+interact e1 e2 photon 0time
+propagate e1 -- no-arrow
+draw e1~1:e1~2 e1~2:e1~3 photon arc
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.2\textwidth}\begin{center}
+\begin{feynr}
+input e1 e2 -- electron
+propagate e1 -- no-arrow
+interact e1 e2 photon 0time
+propagate e1 -- no-arrow
+draw e1~1:e1~2 e1~2:e1~3 photon arc
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+We've introduced two new flags, \texttt{no-arrow} and \texttt{arc}, and a new syntax which can be used in place of a node argument to \texttt{draw}.
+We've got almost the same diagram as in our very first example, except for the final \texttt{draw} command, which adds an arcing photon.
+\begin{wrapfigure}{r}{0.2\textwidth}
+\begin{center}
+\begin{feynr}
+input e1 e2 -- electron
+propagate e1 -- no-arrow
+interact e1 e2 photon 0time
+propagate e1 -- no-arrow
+draw e1~1:e1~2 e1~2:e1~3 photon
+\end{feynr}
+\caption{Ugly!}
+\end{center}
+\end{wrapfigure}
+When specifying nodes in a \texttt{draw} command you may optionally use the syntax \texttt{a:b} to anchor one end of the drawn connection to half way between node \texttt{a} and \texttt{b}.
+For example, in this case the first end of our arcing photon is anchored half way beteween \texttt{e1$\sim$1} and \texttt{e1$\sim$2}, namely the midpoint of the lower leftmost edge.
+The flag \texttt{arc} simply specifies that the drawn connection should be a segment of a circle rather than a straight connection -- much nicer looking in this case.
+Compare to the unarced version to the right.
+Finally, we need to supress the arrows on the lines for \texttt{e1}, because they would overlap with the photon in an ugly way.
+We can do this by passing the \texttt{no-arrow} flag into \texttt{propagate} in the right two places, namely before and after the interaction.
+
+Sometimes we may wish to render a diagram like the following, with a self-interaction on an edge.
+\begin{figure}[h!]\begin{subfigure}[h]{0.64\textwidth}\begin{center}
+\begin{lstlisting}
+input p1 p2 -- photon
+interact p1 p2 electron 0time long
+draw 0.8:p1~2:p2~2 0.2:p1~2:p2~2 photon arc
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.2\textwidth}\begin{center}
+\begin{feynr}
+input p1 p2 -- photon
+interact p1 p2 electron 0time long
+draw 0.8:p1~2:p2~2 0.2:p1~2:p2~2 photon arc
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+Here we're using the extended syntax \texttt{proportion:a:b}, which sets an anchor point part way between two nodes.
+Here we draw a photon between two points 20\% and 80\% along the middle edge.
+If we had wanted the arc to be below the edge instead of above it we could add the flag \texttt{flip}.
+Additionally, I passed the argument \texttt{long} to make the middle edge 50\% longer, giving some extra room for the photon semi-circle.
+However, if I were laying this diagram out as a fourth order upgrade to the second order version without the extra loop, I could choose to not pass \texttt{long}, and have a diagram that beautifully differs from the lower order version \emph{only} in the extra looped photon.
+
+We can also use this proportion feature to make room for arrows in the previous fourth order Coulomb repulsion diagram.
+\begin{figure}[h!]\begin{subfigure}[h]{0.66\textwidth}\begin{center}
+\begin{lstlisting}
+input e1 e2 -- electron
+interact e1 e2 photon 0time
+draw 0.25:e1~1:e1~2 0.75:e1~2:e1~3 photon arc
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.2\textwidth}\begin{center}
+\begin{feynr}
+input e1 e2 -- electron
+interact e1 e2 photon 0time
+draw 0.25:e1~1:e1~2 0.75:e1~2:e1~3 photon arc
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+It's up to you to decide which you think looks nicer -- I really like putting the arrows back in.
+Using just these arc loops we can produce other useful features, such as circular electron propagation.
+
+\begin{figure}[h!]\begin{subfigure}[h]{0.66\textwidth}\begin{center}
+\begin{lstlisting}
+input e1 e2 -- electron
+skeleton e1 e2 photon 0time long
+draw e1~2 0.3:e1~2:e2~2 photon
+draw 0.3:e1~2:e2~2 0.7:e1~2:e2~2 electron arc
+draw 0.7:e1~2:e2~2 0.3:e1~2:e2~2 electron arc
+draw 0.7:e1~2:e2~2 e2~2 photon
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.2\textwidth}\begin{center}
+\begin{feynr}
+input e1 e2 -- electron
+skeleton e1 e2 photon 0time long
+draw e1~2 0.3:e1~2:e2~2 photon
+draw 0.3:e1~2:e2~2 0.7:e1~2:e2~2 electron arc
+draw 0.7:e1~2:e2~2 0.3:e1~2:e2~2 electron arc
+draw 0.7:e1~2:e2~2 e2~2 photon
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+There's a lot of stuff going on here, again using our powerful combination of \texttt{skeleton} and \texttt{draw}.
+It's a bit of a hack, but let's go through it.
+The \texttt{skeleton} command gives the type, length, and angle of the interaction, laying out the structure (same as always).
+The first and last \texttt{draw} commands draw little lengths of photons up along the first and last 30\% of the middle edge.
+Finally, the middle two \texttt{draw} commands draw the two halfs of the circle.
+Note that the order of the arguments is swapped between them, which is why they aren't just drawn on top of each other.
+Of course, we could also have done it by using the\texttt{positron} and \texttt{flip} flags on one, and keeping the argument order the same.
+However, I think this looks cleaner.
+For convenience, the above four draw commands can be acheived on the edge between \texttt{a} and \texttt{b} with the single macro command \texttt{photon-loop a b}.
+For example:
+\begin{figure}[h!]\begin{subfigure}[h]{0.66\textwidth}\begin{center}
+\begin{lstlisting}
+input e1 e2 -- electron
+skeleton e1 e2 photon 0time long
+propagate e1 e2 -- 0space
+skeleton e1 e2 photon 0time long
+photon-loop e1~2 e2~2
+photon-loop e1~3 e2~3
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.2\textwidth}\begin{center}
+\begin{feynr}
+input e1 e2 -- electron
+skeleton e1 e2 photon 0time long
+propagate e1 e2 -- 0space
+skeleton e1 e2 photon 0time long
+photon-loop e1~2 e2~2
+photon-loop e1~3 e2~3
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+
+\newpage
+\section*{Documentation}
+Commands:
+\begin{center}
+\begin{tabular}{r|l}
+	Command & Arguments \\\hline
+	\texttt{input} & \texttt{name1 name2 \dots} \ optionally: \texttt{-- flag1 flag2 \dots} \\
+	\texttt{output} & \texttt{name1 name2 \dots} \ optionally: \texttt{-- flag1 flag2 \dots} \\
+	\texttt{propagate} & \texttt{name1 name2 \dots} \ optionally: \texttt{-- flag1 flag2 \dots} \\
+	\texttt{interact} & \texttt{node1 node2} \ optionally: \texttt{flag1 flag2 \dots} \\
+	\texttt{-} & \texttt{node1 node2} \ optionally: \texttt{flag1 flag2 \dots} \\
+	\texttt{skeleton} & \texttt{node1 node2} \ optionally: \texttt{flag1 flag2 \dots} \\
+	\texttt{draw} & \texttt{location1 location2} \ optionally: \texttt{flag1 flag2 \dots} \\
+	\texttt{photon-loop} & \texttt{node1 node2}
+\end{tabular}
+\end{center}
+In the above specifications, the field \texttt{name} can be any particle name, like \texttt{xyz}.
+The field \texttt{node} can be a particle name or particlar node of that particle, like \texttt{xyz} or \texttt{xyz$\sim$2}.
+Finally, the \texttt{location} field can any of the above \emph{plus} the special syntaxes \texttt{abc$\sim$1:xyz$\sim$2} or \texttt{proportion:abc$\sim$1:xyz$\sim$2}.
+Valid flags for nodes are:
+\begin{quote}
+\texttt{electron}, \texttt{positron}, \texttt{photon}, \texttt{input}, \texttt{output}
+\end{quote}
+Valid flags for interactions are:
+\begin{quote}
+\texttt{electron}, \texttt{positron}, \texttt{photon}, \texttt{hidden}, \texttt{free}, \texttt{0time}, \texttt{0space}, \texttt{arc}, \texttt{flip}, \texttt{no-arrow}
+\end{quote}
 
 \end{document}
 

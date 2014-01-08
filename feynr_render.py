@@ -443,15 +443,22 @@ def process_macros(code):
 		if not line: continue
 		line = line.split(" ")
 		cmd, args = line[0], line[1:]
-		if cmd == "loop":
-			pass
-		output.append(original_line)
+		if cmd == "photon-loop":
+			assert len(args) == 2
+			for line in """draw {a} 0.3:{a}:{b} photon
+draw 0.3:{a}:{b} 0.7:{a}:{b} electron arc
+draw 0.7:{a}:{b} 0.3:{a}:{b} electron arc
+draw 0.7:{a}:{b} {b} photon""".format(a=args[0], b=args[1]).split("\n"):
+				output.append(line)
+		else:
+			output.append(original_line)
 	return output
 
 def compile_feynr_code(code):
 	d = Drawing()
 	code = code.split("\n")
 	code = process_macros(code)
+	print code
 	for line in code:
 		line = line.split("%")[0].strip()
 		if not line: continue
