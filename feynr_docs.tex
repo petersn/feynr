@@ -17,7 +17,7 @@ All you need are the files \texttt{feynr.sty} and \texttt{feynr\_render.py}.
 Mark \texttt{feynr\_render.py} as executable, and place it on your path.
 Add \texttt{feynr.sty} to your \TeX path, and rerun \texttt{texhash}.
 You are now set up.
-\subsection*{Lazy (/Non-Root) Installl}
+\subsection*{Lazy (/Non-Root) Install}
 Copy both \texttt{feynr.sty} and \texttt{feynr\_render.py} to the directory for your project.
 Instead of running \texttt{feynr\_render.py source.tex} to rebuild your diagrams you'll have to run \texttt{python feynr\_render.py source.tex}.
 C'est la vie.
@@ -197,7 +197,7 @@ In this way, every vertex in our diagram receives a node label, and we can add e
 \newpage
 When drawing Feynman diagrams we frequently want to add an emitted photon without affecting the layout of our diagram.
 Frequently we want this photon to be reabsorbed elsewhere in our diagram.
-Just like before where we used \texttt{skeleton} and \texttt{draw} to separate the layout and components of our diagram, here we can use \texttt{draw} to add additional details without distoring our diagram.
+Just like before where we used \texttt{skeleton} and \texttt{draw} to separate the layout and components of our diagram, here we can use \texttt{draw} to add additional details without distorting our diagram.
 Let's examine the following sort of diagram:
 
 \begin{figure}[h!]\begin{subfigure}[h]{0.6\textwidth}\begin{center}
@@ -232,10 +232,10 @@ draw e1~1:e1~2 e1~2:e1~3 photon
 \end{center}
 \end{wrapfigure}
 When specifying nodes in a \texttt{draw} command you may optionally use the syntax \texttt{a:b} to anchor one end of the drawn connection to half way between node \texttt{a} and \texttt{b}.
-For example, in this case the first end of our arcing photon is anchored half way beteween \texttt{e1$\sim$1} and \texttt{e1$\sim$2}, namely the midpoint of the lower leftmost edge.
+For example, in this case the first end of our arcing photon is anchored half way between \texttt{e1$\sim$1} and \texttt{e1$\sim$2}, namely the midpoint of the lower leftmost edge.
 The flag \texttt{arc} simply specifies that the drawn connection should be a segment of a circle rather than a straight connection -- much nicer looking in this case.
 Compare to the unarced version to the right.
-Finally, we need to supress the arrows on the lines for \texttt{e1}, because they would overlap with the photon in an ugly way.
+Finally, we need to suppress the arrows on the lines for \texttt{e1}, because they would overlap with the photon in an ugly way.
 We can do this by passing the \texttt{no-arrow} flag into \texttt{propagate} in the right two places, namely before and after the interaction.
 
 Sometimes we may wish to render a diagram like the following, with a self-interaction on an edge.
@@ -298,11 +298,11 @@ There's a lot of stuff going on here, again using our powerful combination of \t
 It's a bit of a hack, but let's go through it.
 The \texttt{skeleton} command gives the type, length, and angle of the interaction, laying out the structure (same as always).
 The first and last \texttt{draw} commands draw little lengths of photons up along the first and last 30\% of the middle edge.
-Finally, the middle two \texttt{draw} commands draw the two halfs of the circle.
+Finally, the middle two \texttt{draw} commands draw the two halves of the circle.
 Note that the order of the arguments is swapped between them, which is why they aren't just drawn on top of each other.
 Of course, we could also have done it by using the \texttt{positron} and \texttt{flip} flags on one, and keeping the argument order the same.
 However, I think this looks cleaner.
-For convenience, the above four draw commands can be acheived on the edge between \texttt{a} and \texttt{b} with the single macro command \texttt{photon-loop a b}.
+For convenience, the above four draw commands can be achieved on the edge between \texttt{a} and \texttt{b} with the single macro command \texttt{photon-loop a b}.
 For example:
 \begin{figure}[h!]\begin{subfigure}[h]{0.66\textwidth}\begin{center}
 \begin{lstlisting}
@@ -341,7 +341,7 @@ Commands:
 \end{tabular}
 \end{center}
 In the above specifications, the field \texttt{name} can be any particle name, like \texttt{xyz}.
-The field \texttt{node} can be a particle name or particlar node of that particle, like \texttt{xyz} or \texttt{xyz$\sim$2}.
+The field \texttt{node} can be a particle name or particular node of that particle, like \texttt{xyz} or \texttt{xyz$\sim$2}.
 Finally, the \texttt{location} field can any of the above \emph{plus} the special syntaxes \texttt{abc$\sim$1:xyz$\sim$2} or \texttt{proportion:abc$\sim$1:xyz$\sim$2}.
 Valid flags for nodes are:
 \begin{quote}
