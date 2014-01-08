@@ -1,0 +1,119 @@
+\documentclass[12pt]{article}
+\usepackage[margin=3cm]{geometry}
+\usepackage{feynr}
+\usepackage{listings}
+\usepackage{caption,subcaption}
+\newcommand{\feynR}{\texttt{feynr}}
+\title{Using \feynR}
+\author{Peter Schmidt-Nielsen}
+\begin{document}
+\maketitle
+\section*{Basic Usage}
+\subsection*{Command-line Usage}
+Include \feynR{} with the usual \texttt{\textbackslash{}usepackage\{feynr\}}.
+Place your diagram source code in a \feynR{} environment to render a diagram.
+For example, \texttt{\textbackslash{}begin\{feynr\} source \textbackslash{}end\{feynr\}}.
+Run \texttt{feynr\_render} on your \LaTeX{} file after each time you update a \feynR{} diagram:
+\begin{quote}
+\texttt{feynr\_render source.tex}\\
+\texttt{pdflatex source.tex}
+\end{quote}
+You can download \feynR{} at
+
+In \feynR{}, particles are explicitly tracked.
+You can create an input particle to your diagram with the \texttt{input} command.
+For example, \texttt{input a} defines an input particle called \texttt{a}.
+Special flags can be passed to any \feynR{} command with a pair of dashes.
+For example, to declare an input particle \texttt{a} that's an electron we may use: \texttt{input a -- electron}.
+More than one particle may be declared in a single command, and the flags passed apply to all particles.
+For example, to declare three positrons: \texttt{input p1 p2 p3 -- positron}.
+Particle types may be omitted if they can be unambiguously inferred from elsewhere in the diagram.
+
+Particles can be made to interact with each other with the \texttt{interact} command.\footnote{The command \texttt{interact} can also be abbreviated as a single dash.}
+For example, \texttt{interact p1 p2} will cause the particles \texttt{p1} and \texttt{p2} to exchange a particle.
+Again, the interaction type may be unambiguous.
+For example, if \texttt{p1} and \texttt{p2} are photons, and \texttt{p1} is already known to emit a positron (from another \texttt{interact} command), then the interaction is unambiguous, and an electron will be emitted from \texttt{p1}, and propagate to interact with \texttt{p2}.
+However, frequently you will have to specify what form the interaction takes.
+The flags \texttt{electron}, \texttt{positron}, and \texttt{photon} denote that the given particle propagated from the first argument to the second argument.
+For example, \texttt{interact p1 p2 -- electron} causes an electron to be emitted by \texttt{p1} and absorbed by \texttt{p2}.\footnote{Naturally, \texttt{interact a b -- electron} is equivalent to \texttt{interact b a -- positron}.}
+Note that as \texttt{interact} takes exactly two node arguments, the \texttt{--} separating flags from node arguments is optional.
+You may write either \texttt{interact a b -- flags} or \texttt{interact a b flags}, these are equivalent.
+Just like \texttt{input}, there is a command \texttt{output} that can be used to disambiguate diagrams.
+For example, if, at the end of a sequence of interactions, it's ambiguous what type of particle \texttt{a} is, we can specify with, for example: \texttt{output a -- photon}.
+You can identify interactions in your diagram that couldn't have their type inferred -- they will appear as red sine waves.
+
+Finally, we need to give \feynR{} some hints about the layout of our diagram.
+If you attempt to compile a diagram without any layout hints it will fail, as it can't figure out what angles the various lines should be drawn at.
+There are two default layout hints, \texttt{0space} and \texttt{0time}.
+These hints indicate that the given interaction should be drawn perpendicular to the specified axis.
+In other words, in a time-up Feynman diagram, \texttt{0time} indicates that the interaction should be drawn horizontally.
+For example, we can write \texttt{interact e1 e2 photon 0time} to cause particles \texttt{e1} and \texttt{e2} to exchange a photon that is drawn perpendicular to the time axis.
+
+The \texttt{propagate} command accumulates flags to be added on the next propagation that a given particle makes.
+For example, if we would like the particle \texttt{a} to propagate straight along the time axis the next time it propagates, we can issue the command \texttt{propagate a -- 0space}.
+
+Putting these all pieces together, let's look at some examples:
+
+\begin{figure}[h]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{lstlisting}
+input e -- electron
+propagate e -- 0space
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{feynr}
+input e -- electron
+propagate e -- 0space
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+The first line defines an electron, and the second is a layout hint that it should propagate along the time axis.
+
+\begin{figure}[h]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{lstlisting}
+input e1 e2 -- electron
+interact e1 e2 photon 0time
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{feynr}
+input e1 e2 -- electron
+interact e1 e2 photon 0time
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+Here two electrons are defined in the first line, and made to exchange a photon along the space axis in the second.
+
+\begin{figure}[h]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{lstlisting}
+input e -- electron
+input p -- photon
+interact e p 0time
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{feynr}
+input e -- electron
+input p -- photon
+interact e p electron 0time
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+Not substantially more complicated than the previous example.
+
+\begin{figure}[h!]\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{lstlisting}
+input p1 p2 -- photon
+interact p1 p2 electron 0time
+propagate p1 p2 -- 0space
+interact p1 p2 electron 0time
+\end{lstlisting}
+\end{center}\end{subfigure}\hfill\vrule\hfill\begin{subfigure}[h]{0.4\textwidth}\begin{center}
+\begin{feynr}
+input p1 p2 -- photon
+interact p1 p2 electron 0time
+propagate p1 p2 -- 0space
+interact p1 p2 electron 0time
+\end{feynr}
+\end{center}\end{subfigure}\end{figure}
+Here Delbr\"uck scattering is concisely described in four lines.
+The third line (\texttt{propagate p1 p2 -- 0space}) makes sure that the electrons propagate vertically in the diagram, forming a nice square box when used with the horizontal \texttt{0time} interactions.
+
+\section*{Advanced Usage}
+
+\end{document}
+
