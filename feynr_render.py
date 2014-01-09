@@ -160,6 +160,11 @@ class Line:
 		if node is self.obj_b: t = anti_particle[t]
 		self.type = t
 
+	def get_type_from(self, node):
+		if self.type is None: return None
+		if node is not self.obj_b: return anti_particle[self.type]
+		return self.type
+
 	def set_angle_from(self, obj, angle):
 		if obj is self.obj_a:
 			self.angle = angle
@@ -401,7 +406,7 @@ class Drawing:
 					# Examine the incoming lines.
 					type_counts = {None: 0, "electron": 0, "positron": 0, "photon": 0}
 					for line in node.lines:
-						type_counts[line.type] += 1
+						type_counts[line.get_type_from(node)] += 1
 					if type_counts[None] == 1:
 						fill_in = anti_particle[[k for k, v in type_counts.items() if v == 0 and k is not None][0]]
 						for line in node.lines:
