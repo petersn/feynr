@@ -549,7 +549,7 @@ if __name__ == "__main__":
 	for i, s in enumerate(envs):
 		code = compile_feynr_code(s)
 #		print code
-		fd = open("feynr%i.tex" % i, "w")
+		fd = open("_feynr_diagram%i.tex" % i, "w")
 		fd.write(code)
 		fd.close()
 
